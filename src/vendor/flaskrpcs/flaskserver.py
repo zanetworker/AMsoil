@@ -76,7 +76,8 @@ class FlaskServer(object):
             WSGIServer(self._app, bindAddress=(host, fcgi_port)).run()
         else:
             logger.info("registering app server at %s:%i", host, app_port)
-            # do the following line manually, so we can intervene and adjust the ssl context
+            # this workaround makes sure that the client cert can be acquired later (even when running the development server)
+            # copied all this stuff from the actual flask implementation, so we can intervene and adjust the ssl context
             # self._app.run(host=host, port=app_port, ssl_context='adhoc', debug=debug, request_handler=ClientCertHTTPRequestHandler)
             
             # the code from flask's `run...`

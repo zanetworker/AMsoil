@@ -14,6 +14,9 @@ import ext.sfa.trust.rights as sfa_rights
 from ext.sfa.util.faults import SfaFault
 import ext.geni
 
+from amsoil.core import serviceinterface
+
+@serviceinterface
 def decode_urn(urn):
     """Returns authority, type and name associated with the URN as string.
     example call:
@@ -22,6 +25,7 @@ def decode_urn(urn):
     urn = URN(urn=str(urn))
     return urn.getAuthority(), urn.getType(), urn.getName()
 
+@serviceinterface
 def encode_urn(authority, typ, name):
     """
     Returns a URN string with the given {authority}, {typ}e and {name}.
@@ -31,6 +35,7 @@ def encode_urn(authority, typ, name):
     """
     return URN(authority=authority, type=typ, name=name).urn_string()
 
+@serviceinterface
 def create_certificate(urn, issuer_key=None, issuer_cert=None, is_ca=False,
                        public_key=None, life_days=1825, email=None, uuidarg=None):
     """Creates a certificate.
@@ -70,10 +75,12 @@ def create_certificate(urn, issuer_key=None, issuer_cert=None, is_ca=False,
         priv_key_result = cert_keys.as_pem()
     return cert_gid.save_to_string(), cert_keys.get_m2_pkey().get_rsa().as_pem(), priv_key_result
 
+@serviceinterface
 def create_slice_certificate(slice_urn, issuer_key, issuer_cert, expiration):
     """Returns only the x509 certificate as string (as PEM)."""
     return create_certificate(slice_urn, issuer_key, issuer_cert, uuidarg=uuid.uuid4())[0]
 
+@serviceinterface
 def create_credential(owner_cert, target_cert, issuer_key, issuer_cert, typ, expiration, delegatable=False):
     """
     {expiration} can be a datetime.datetime or a int/float (see http://docs.python.org/2/library/datetime.html#datetime.date.fromtimestamp) or a string with a UTC timestamp in it
@@ -106,6 +113,7 @@ def create_credential(owner_cert, target_cert, issuer_key, issuer_cert, typ, exp
 
     return ucred.save_to_string()
 
+@serviceinterface
 def extract_certificate_info(certificate):
     """Returns the urn, uuid and email of the given certificate."""
     user_gid = GID(string=certificate)
@@ -114,6 +122,7 @@ def extract_certificate_info(certificate):
     user_email = user_gid.get_email()
     return user_urn, user_uuid, user_email
 
+@serviceinterface
 def verify_certificate(certificate, trusted_cert_path=None):
     """
     Taken from ext...gid
@@ -134,6 +143,7 @@ def verify_certificate(certificate, trusted_cert_path=None):
         raise ValueError("Error verifying certificate: %s" % (str(e),))
     return None
 
+@serviceinterface
 def verify_credential(credentials, owner_cert, target_urn, trusted_cert_path, privileges=()):
     """
     Give a list of credentials and they will be checked to have the privleges and to be trusted by the trusted_certs.
@@ -170,14 +180,6 @@ def verify_credential(credentials, owner_cert, target_urn, trusted_cert_path, pr
     - slice: "refresh", "embed", "bind", "control", "info" (well, do the resolving yourself...)
     """
 
-    # if client_cert == None:
-    #     # work around if the certificate could not be acquired due to the shortcommings of the werkzeug library
-    #     if config.get("flask.debug"):
-    #         import ext.sfa.trust.credential as cred
-    #         client_cert = cred.Credential(string=geni_credentials[0]).gidCaller.save_to_string(save_parents=True)
-    #     else:
-    #         raise GENIv3ForbiddenError("Could not determine the client SSL certificate")
-    # test the credential
     creds = credentials # strip the type info if a list of dicts is given
     if len(credentials) > 0 and isinstance(credentials[0], dict):
         creds = [cred.values()[0] for cred in credentials]
@@ -186,23 +188,3 @@ def verify_credential(credentials, owner_cert, target_urn, trusted_cert_path, pr
         cred_verifier.verify_from_strings(owner_cert, creds, target_urn, privileges)
     except Exception as e:
         raise ValueError("Error verifying the credential: %s" % (str(e),))
-
-def infer_client_cert(client_cert, credentials):
-    """Returns client_cert if it is not None. It returns the first cert of the credentials if one is given.
-    This is only needed to work around if the certificate could not be acquired due to the shortcommings of the werkzeug library.
-    """
-    import amsoil.core.log
-    logger=amsoil.core.log.getLogger('geni_trust')
-
-    import amsoil.core.pluginmanager as pm
-    config = pm.getService('config')
-
-    if client_cert != None:
-        return client_cert
-    elif config.get("flask.debug"):
-        first_cred = credentials[0]
-        first_cred_val = first_cred.values()[0]
-        logger.warning("Infered client cert from credential as workaround missing feature in werkzeug")
-        return sfa_cred.Credential(string=first_cred_val).gidCaller.save_to_string(save_parents=True)
-    else:
-        raise RuntimeError("The workaround could not determine the client SSL certificate (bloody werkzeug library! please try to use production mode)")
