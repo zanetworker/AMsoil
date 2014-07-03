@@ -5,6 +5,11 @@ All (non core) implementations/plugins should use the config service/plugin.
 
 import logging
 import os.path
+import json
+
+from amsoil.core.exception import *
+
+import amsoil
 
 ##Paths
 SRC_PATH = os.path.normpath(os.path.join(os.path.dirname(__file__), '..'))
@@ -36,3 +41,16 @@ def expand_amsoil_path(path):
         return path
     else:
         return os.path.normpath(os.path.join(ROOT_PATH, path))
+
+
+CONFIG_PATH = expand_amsoil_path('deploy/config.json')
+try:
+    CONFIG = json.load(open(CONFIG_PATH))
+except Exception:
+    raise MissingFileOrData(CONFIG_PATH)
+
+default_reg_ip, default_reg_port = 'localhost', '1234'
+netconfrpc_server_ip = CONFIG['NETCONF_SERVER']['server'] or default_reg_ip
+netconfrpc_server_port = CONFIG['NETCONF_SERVER']['port'] or default_reg_port
+
+

@@ -2,7 +2,6 @@ import os.path
 from flask import request
 
 from amsoil.core import serviceinterface
-import amsoil.core.pluginmanager as pm
 
 from amsoil.config import expand_amsoil_path
 
