@@ -25,6 +25,15 @@ class NETCONF_Handler(object):
 
     @serviceinterface
     def list_interfaces(self):
+        """
+         TODO: In case  filter is not working, fetch the whole config and view interfaces only
+        """
         return self._delegate.list_interfaces()
 
+    @serviceinterface
+    def list_capabilities(self):
+        return self._delegate.list_capabilities()
 
+
+    def set_parameter(self, parameter_type, parameter_value):
+        return self._delegate.set_parameter(parameter_type, parameter_value)

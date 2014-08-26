@@ -44,13 +44,22 @@ def expand_amsoil_path(path):
 
 
 CONFIG_PATH = expand_amsoil_path('deploy/config.json')
+
 try:
     CONFIG = json.load(open(CONFIG_PATH))
 except Exception:
     raise MissingFileOrData(CONFIG_PATH)
 
-default_reg_ip, default_reg_port = 'localhost', '1234'
-netconfrpc_server_ip = CONFIG['NETCONF_SERVER']['server'] or default_reg_ip
-netconfrpc_server_port = CONFIG['NETCONF_SERVER']['port'] or default_reg_port
+# NETCONF RPC Server configuration parameters
+default_reg_ip, default_reg_port= 'localhost', '1234'
+netconfrpc_server_ip = CONFIG['NETCONF_RPC_SERVER']['server'] or default_reg_ip
+netconfrpc_server_port = CONFIG['NETCONF_RPC_SERVER']['port'] or default_reg_port
+
+# NETCONF Server configuration parameters
+netconf_server_password = CONFIG['NETCONF_SERVER']['password'] or None
+netconf_server_namespace  = CONFIG['NETCONF_SERVER']['yang_namespace'] or None
+netconf_server_port = CONFIG['NETCONF_SERVER']['port']
+netconf_server_ip = CONFIG['NETCONF_SERVER']['server']
+
 
 
